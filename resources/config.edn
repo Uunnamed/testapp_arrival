@@ -1,0 +1,2 @@
+{:server {:port 8080 :join? false}
+ :db     {:db-url "datomic:mem://service-platform"}}
