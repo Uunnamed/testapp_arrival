@@ -10,7 +10,7 @@
 (defn create-order
   [order]
   (let [id (random-uuid)]
-    (deref (d/transact *db* [(assoc order :order/id id :order/status :order.status/active)]))
+    @(d/transact *db* [(assoc order :order/id id :order/status :order.status/active)])
     (get-order-by-id id)))
 
 (defn update-order
@@ -19,7 +19,7 @@
     (do
       @(d/transact *db* [(merge old-order order)])
       (get-order-by-id id))
-    (throw (ex-info "Order does not exist" order))))
+    (throw (Exception. (format "Order with id: %s does not exist" id)))))
 
 (defn get-orders
   []

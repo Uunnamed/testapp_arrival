@@ -21,7 +21,7 @@
 
 
 (defn main-page
-  [_]
+  []
   {:status  200
    :headers {"Content-Type" "text/html"}
    :body    (-> "public/index.html"
@@ -68,7 +68,7 @@
 
 
 (defroutes app
-  (GET "/testapp" req (main-page req))
+  (GET "/testapp" _ (main-page))
   (GET "/testapp/api/orders" _ (get-orders))
   (POST "/testapp/api/order" req (create-order req))
   (PUT "/testapp/api/order" req (update-order req))
