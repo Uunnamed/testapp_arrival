@@ -40,7 +40,7 @@
   [{:keys [params]}]
   (let [[err valids-params] (validate-order params)]
     (if err
-      (bad-request {:errors err})
+      (bad-request {:error err})
       (let [result (order/create-order valids-params)]
         (response {:success true :result result})))))
 
@@ -54,7 +54,7 @@
   [{:keys [params]}]
   (let [[err valids-params] (validate-order params)]
     (if err
-      (bad-request {:errors err})
+      (bad-request {:error err})
       (try
         (let [result (order/update-order valids-params)]
           (response {:success true :result result}))
