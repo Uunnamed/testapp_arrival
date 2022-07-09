@@ -286,8 +286,8 @@
       [:div.label "Description"]
       [errors-component :order/description]
       [:div.control
-       [:input.input
-        {:type      "text"
+       [:textarea.textarea
+        {:rows      3
          :value     description
          :on-change #(rf/dispatch [:change-active-order :order/description (.. % -target -value)])}]]]
      [:div.field
