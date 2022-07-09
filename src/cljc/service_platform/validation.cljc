@@ -1,7 +1,6 @@
 (ns service-platform.validation
   (:require [struct.core :as st]
-            [tick.core :as t]
-            [tick.locale-en-us]))
+            [tick.core :as t]))
 
 (defn str->date
   [date]

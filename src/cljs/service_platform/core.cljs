@@ -212,7 +212,7 @@
 
 (defn errors-component [id]
   (when-let [error @(rf/subscribe [:validation-error id])]
-    [:div.notification.is-danger error]))
+    [:div.notification.is-danger.is-size-7.is-small error]))
 
 
 (defn nav-link [uri title page]
