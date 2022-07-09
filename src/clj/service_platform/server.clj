@@ -29,6 +29,13 @@
                 slurp
                 (str/replace #"\{\{csrf-field\}\}" (anti-forgery-field)))})
 
+(defn page-404
+  [_]
+  {:status  404
+   :headers {"Content-Type" "text/html"}
+   :body    "page not found"})
+
+
 (defn create-order
   [{:keys [params]}]
   (let [[err valids-params] (validate-order params)]
@@ -55,11 +62,25 @@
           (bad-request {:error (ex-message e)}))))))
 
 (defn delete-order
-  [{{id :id} :params}]
-  (throw (Exception. "Some server error"))
+  [{{id :order/id} :params}]
   (order/delete-order id)
   (response {:success true}))
 
+
+(defroutes app
+  (GET "/testapp" req (main-page req))
+  (GET "/testapp/api/orders" _ (get-orders))
+  (POST "/testapp/api/order" req (create-order req))
+  (PUT "/testapp/api/order" req (update-order req))
+  (DELETE "/testapp/api/order" req (delete-order req))
+  page-404)
+
+(defn wrap-print-req-resp [handler]
+  (fn [req]
+    (log/debug "req: " (dissoc req :body))
+    (let [resp (handler req)]
+      (log/debug "resp: " (dissoc resp :body))
+      resp)))
 
 (defn wrap-exception
   [handler]
@@ -68,26 +89,6 @@
       (handler request)
       (catch Throwable e
         (bad-request {:error (.getMessage e)})))))
-
-(defn page-404
-  [_]
-  {:status 404
-   :body   "page not found"})
-
-(defroutes app
-  (GET "/" req (main-page req))
-  (GET "/api/orders" _ (get-orders))
-  (POST "/api/order" req (create-order req))
-  (PUT "/api/order" req (update-order req))
-  (DELETE "/api/order" req (delete-order req))
-  page-404)
-
-(defn wrap-print-req-resp [handler]
-  (fn [req]
-    (log/info "req: " (dissoc req :body))
-    (let [resp (handler req)]
-      (log/info "resp: " (dissoc resp :body))
-      resp)))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
@@ -101,11 +102,11 @@
 
 (def handler
   (-> #'app
-      wrap-transit-json-response
       wrap-exception
       wrap-print-req-resp
       (wrap-resource "public/")
       wrap-csrf
+      wrap-transit-json-response
       wrap-transit-json-params
       (wrap-defaults
         (-> site-defaults
@@ -114,8 +115,8 @@
       ))
 
 (defstate ^{:on-reload :noop} server
-:start
-(let [{serv-opt :server} config]
-  (run-jetty #'handler serv-opt))
-:stop
-(.stop server))
+  :start
+  (let [{serv-opt :server} config]
+    (run-jetty #'handler serv-opt))
+  :stop
+  (.stop server))

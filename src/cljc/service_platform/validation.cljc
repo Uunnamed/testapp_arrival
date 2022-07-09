@@ -6,44 +6,42 @@
 (defn str->date
   [date]
   (try
-    (-> (t/parse-date (subs date 0 10) (t/formatter "yyyy-MM-dd"))
-        t/beginning
-        t/inst)
+    (t/inst (str date "T00:00:00.001Z"))
     (catch #?(:cljs :default :clj Throwable) e
       (println e)
       false)))
 
-(def order-schema
-  [[:order/title
-    st/required
-    st/string]
-   [:order/description
-    st/required
-    st/string]
-   [:order/applicant
-    st/required
-    st/string]
-   [:order/executor
-    st/required
-    st/string]
-   [:order/execution-date
-    st/required
-    [st/string :coerce str->date]
-    {:message  "execution date is not valid"
-     :validate inst?}]])
+  (def order-schema
+    [[:order/title
+      st/required
+      st/string]
+     [:order/description
+      st/required
+      st/string]
+     [:order/applicant
+      st/required
+      st/string]
+     [:order/executor
+      st/required
+      st/string]
+     [:order/execution-date
+      st/required
+      [st/string :coerce str->date]
+      {:message  "execution date is not valid"
+       :validate inst?}]])
 
 
-(defn validate-order
-  [params]
-  (st/validate params order-schema))
+  (defn validate-order
+    [params]
+    (st/validate params order-schema))
 
 (comment
-  (validate-order {:id             1
-                   :title          "Ivanov Ivan Ivanovich"
-                   :description    "man"
-                   :execution-date "1999-12-01"
-                   :applicant      "123 avenue"
-                   :executor       "123"})
-  (t/instant "1999-12-31")
+  (validate-order {:order/id             1
+                   :order/title          "Ivanov Ivan Ivanovich"
+                   :order/description    "man"
+                   :order/execution-date "1999-12-01"
+                   :order/applicant      "123 avenue"
+                   :order/executor       "123"})
 
+  (str->date "2022-01-01")
   )

@@ -33,8 +33,8 @@
    :builds
    {:app
     {:target     :browser
-     :output-dir "resources/public/app/js"
-     :asset-path "app/js"
+     :output-dir "target/cljsbuild/public/js"
+     :asset-path "/js"
      :modules    {:main {:init-fn service-platform.core/init
                          :entries [service-platform.core]}}
      :devtools
@@ -47,7 +47,6 @@
     {:target    :node-test
      :output-to "target/test/test.js"
      :autorun   true}}
-   ;;:dev-http     {3000 "resources/public"}
    :npm-deps     []
    :npm-dev-deps [[xmlhttprequest "1.8.0"]]
    }
@@ -56,7 +55,8 @@
                        :prep-tasks   ["compile" ["shadow" "release" "app"]]
                        :aot          :all
                        :uberjar-name "testapp.jar"}
-             :dev     {:jvm-opts       ["-Dconf=dev-config.edn"]
+             :dev     {:jvm-opts       ["-Dconf=dev-config.edn"
+                                        "-Duser.timezone=Europe/Moscow"]
                        :resource-paths ["resources"]
                        :source-paths   ["test/clj" "test/cljs"]}
              :test    {:jvm-opts     ["-Dconf=test-config.edn"]

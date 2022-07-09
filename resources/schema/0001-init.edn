@@ -1,31 +1,40 @@
 [{:db/ident       :order/id
   :db/valueType   :db.type/uuid
   :db/cardinality :db.cardinality/one
-  :db/doc         "The id of the order"
+  :db/doc         "An id of the order"
   :db/unique      :db.unique/identity}
 
  {:db/ident       :order/title
   :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
-  :db/doc         "The title of the order"}
+  :db/doc         "A title of the order"}
 
  {:db/ident       :order/description
   :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
-  :db/doc         "The description of the movie"}
+  :db/doc         "A description of the movie"}
 
  {:db/ident       :order/execution-date
   :db/valueType   :db.type/instant
   :db/cardinality :db.cardinality/one
-  :db/doc         "The date of execution"}
+  :db/doc         "A date of execution"}
 
  {:db/ident       :order/applicant
   :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
-  :db/doc         "The applicant"}
+  :db/doc         "An applicant"}
 
  {:db/ident       :order/executor
   :db/valueType   :db.type/string
   :db/cardinality :db.cardinality/one
-  :db/doc         "The executor of the task"}
+  :db/doc         "An executor of the task"}
+
+ {:db/ident       :order/status
+  :db/valueType   :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc         "A current status of the task"}
+
+ {:db/ident :order.status/active}
+ {:db/ident :order.status/deleted}
+
  ]

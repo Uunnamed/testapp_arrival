@@ -3,7 +3,7 @@
             [re-frame.core :as rf]
             [reagent.dom :as dom]
             [day8.re-frame.http-fx]
-            [service-platform.ajax :refer [as-json load-interceptors!]]
+            [service-platform.ajax :refer [as-transit load-interceptors!]]
             [service-platform.validation :refer [validate-order]]))
 ;; helpers
 (defn vec-delete [v i]
@@ -58,6 +58,8 @@
   (fn [modals [_ modal-id]]
     (get modals modal-id false)))
 
+
+;; alert
 (rf/reg-sub
   :app/alert-error
   (fn [db _]
@@ -117,27 +119,27 @@
 (rf/reg-event-fx
   :api/create-order
   (fn [_ [_ order]]
-    {:http-xhrio (as-json {:method     :post
-                           :params     order
-                           :uri        "/api/order"
-                           :on-success [:db/create-order]
-                           :on-failure [:set-server-errors]})}))
+    {:http-xhrio (as-transit {:method     :post
+                              :params     order
+                              :uri        "/testapp/api/order"
+                              :on-success [:db/create-order]
+                              :on-failure [:set-server-errors]})}))
 (rf/reg-event-fx
   :api/update-order
   (fn [_ [_ order]]
-    {:http-xhrio (as-json {:method     :put
-                           :params     (dissoc order :idx)
-                           :uri        "/api/order"
-                           :on-success [:db/update-order (:idx order)]
-                           :on-failure [:set-server-errors]})}))
+    {:http-xhrio (as-transit {:method     :put
+                              :params     (dissoc order :idx)
+                              :uri        "/testapp/api/order"
+                              :on-success [:db/update-order (:idx order)]
+                              :on-failure [:set-server-errors]})}))
 (rf/reg-event-fx
   :api/delete-order
   (fn [_ [_ order]]
-    {:http-xhrio (as-json {:method     :delete
-                           :uri        "/api/order"
-                           :params     @order
-                           :on-success [:db/delete-order (:idx order)]
-                           :on-failure [:set-server-errors]})}))
+    {:http-xhrio (as-transit {:method     :delete
+                              :uri        "/testapp/api/order"
+                              :params     order
+                              :on-success [:db/delete-order (:idx order)]
+                              :on-failure [:set-server-errors]})}))
 
 (rf/reg-event-db
   :set-server-errors
@@ -153,10 +155,10 @@
 (rf/reg-event-fx
   :fetch-orders
   (fn [_ _]
-    {:http-xhrio (as-json {:method     :get
-                           :uri        "/api/orders"
-                           :on-success [:set-orders]
-                           :on-failure [:set-server-errors]})}))
+    {:http-xhrio (as-transit {:method     :get
+                              :uri        "/testapp/api/orders"
+                              :on-success [:set-orders]
+                              :on-failure [:set-server-errors]})}))
 
 ;;subscriptions
 
@@ -169,7 +171,6 @@
   :validation-errors
   :<- [:form/active-order]
   (fn [order _]
-    (println (uuid? (:order/id order)))
     (when order
       (-> order
           validate-order
@@ -264,22 +265,13 @@
     [:footer.modal-card-foot
      footer]]])
 
-(defn modal-button
-  ([id title body footer & events]
-   [:div
-    [:button.button.is-primary.fa.fa-edit.is-small
-     {:on-click #(mapv rf/dispatch (conj events [:app/show-modal id]))}
-     title]
-    [modal-card id title body footer]]))
-
 (defn order-form
   [order]
   (let [{:keys [order/title
                 order/description
                 order/execution-date
                 order/applicant
-                order/executor]} @order
-        _                        (.log js/console title)]
+                order/executor]} @order]
     [:div
      [errors-component :message]
      [:div.field
@@ -363,17 +355,15 @@
                     (when-not @(rf/subscribe [:validation-errors?])
                       (rf/dispatch [:app/hide-modal :order/edit])
                       (rf/dispatch [:api/update-order @order])))}
-      "Edit"]]
-    )
-  )
+      "Edit"]]))
 
 (defn delete-order-btn [idx]
   [:div
    [:button.button.is-danger.fa.fa-trash-alt.is-small
     {:on-click #(do
                   (rf/dispatch [:app/show-modal :order/delete])
-                  (rf/dispatch [:set-active-order idx]))}
-    ]])
+                  (rf/dispatch [:set-active-order idx]))}]])
+
 (defn delete-modal []
   (r/with-let [order (rf/subscribe [:form/active-order])]
     [modal-card :order/delete "Delete"
@@ -389,7 +379,7 @@
      ;; Footer
      [:div.columns.is-centered
       [:button.button.is-primary.is-danger
-       {:on-click #(mapv rf/dispatch [[:api/delete-order order] [:app/hide-modal :order/delete]])}
+       {:on-click #(mapv rf/dispatch [[:api/delete-order @order] [:app/hide-modal :order/delete]])}
        "Yes"]
       [:button.button.is-primary.is-fullwidth
        {:on-click #(rf/dispatch [:app/hide-modal :order/delete])}
@@ -403,7 +393,7 @@
    [:table.is-bordered
     [:thead
      [:tr
-      [:th.has-text-centered "Id"]
+      [:th.has-text-centered "#"]
       [:th.has-text-centered "Title"]
       [:th.has-text-centered "Description"]
       [:th.has-text-centered "Applicant"]
@@ -413,15 +403,14 @@
      ]
     [:tbody
      (doall (map-indexed
-              (fn [idx {:keys [order/id
-                               order/title
+              (fn [idx {:keys [order/title
                                order/description
                                order/execution-date
                                order/applicant
                                order/executor]}]
                 ^{:key (str idx)}
                 [:tr
-                 [:td.has-text-centered id]
+                 [:td.has-text-centered (inc idx)]
                  [:td.has-text-centered title]
                  [:td.has-text-centered description]
                  [:td.has-text-centered applicant]
@@ -429,8 +418,8 @@
                  [:td.has-text-centered (date->str execution-date)]
                  [:td
                   [:div.columns.is-centered
-                   [:div.column.pr-1 (edit-order-btn idx)]
-                   [:div.column.pl-1 (delete-order-btn idx)]]]])
+                   [:div.column.is-one-fifth (edit-order-btn idx)]
+                   [:div.column.is-one-fifth (delete-order-btn idx)]]]])
               orders))]]])
 
 
