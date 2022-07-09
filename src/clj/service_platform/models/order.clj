@@ -19,7 +19,7 @@
     (do
       @(d/transact *db* [(merge old-order order)])
       (get-order-by-id id))
-    (throw (Exception. (format "Order with id: %s does not exist" id)))))
+    (throw (ex-info "The order does not exist" {:order/id id}))))
 
 (defn get-orders
   []
@@ -35,4 +35,4 @@
   (let [order (get-order-by-id id)]
     (if (:order/id order)
       @(d/transact *db* [(assoc order :order/status :order.status/deleted)])
-      (throw (Exception. (format "Order with id: %s does not exist" id))))))
+      (throw (ex-info "The order does not exist" {:order/id id})))))

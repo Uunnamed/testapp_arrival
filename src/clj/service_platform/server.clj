@@ -42,7 +42,7 @@
     (if err
       (bad-request {:error err})
       (let [result (order/create-order valids-params)]
-        (response {:success true :result result})))))
+        (response {:result result})))))
 
 
 (defn get-orders
@@ -55,17 +55,13 @@
   (let [[err valids-params] (validate-order params)]
     (if err
       (bad-request {:error err})
-      (try
-        (let [result (order/update-order valids-params)]
-          (response {:success true :result result}))
-        (catch Throwable e
-          (bad-request {:error (ex-message e)}))))))
+      (let [result (order/update-order valids-params)]
+        (response {:result result})))))
 
 (defn delete-order
   [{{id :order/id} :params}]
   (order/delete-order id)
-  (response {:success true}))
-
+  (response {:result true}))
 
 (defroutes app
   (GET "/testapp" _ (main-page))
@@ -87,8 +83,11 @@
   (fn [request]
     (try
       (handler request)
+      (catch clojure.lang.ExceptionInfo e
+        (bad-request {:error (ex-message e)}))
       (catch Throwable e
-        (bad-request {:error (.getMessage e)})))))
+        (log/error e)
+        (bad-request {:error "Something went wrong. We are already working on it."})))))
 
 (defn wrap-csrf [handler]
   (wrap-anti-forgery
