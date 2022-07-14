@@ -31,4 +31,4 @@
 
 (defn validate-order
   [params]
-  #?(:clj (st/validate params order-schema) :cljs (st/validate params order-schema)))
+  (st/validate params order-schema))
